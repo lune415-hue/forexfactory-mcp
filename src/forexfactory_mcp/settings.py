@@ -70,8 +70,16 @@ class Settings(BaseSettings):
 
     LOCAL_TIMEZONE: str = "UTC"
 
-    # Tell Pydantic to look for environment variables in `.env`
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # Tell Pydantic to look for environment variables in `.env`.
+    # extra="ignore" is REQUIRED: when this server is launched by a host app
+    # (e.g. an MCP client) whose working dir contains an unrelated `.env`
+    # (TSXCLI's bot env with TOPSTEP_*/API keys), pydantic-settings reads that
+    # dotenv and would otherwise raise extra_forbidden ValidationError at
+    # startup → the process exits → the client sees "-32000 Connection closed".
+    # Ignoring unknown keys makes the server immune to any ambient .env/env.
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     @field_validator("INCLUDE_FIELDS", "EXCLUDE_FIELDS", mode="before")
     @classmethod
