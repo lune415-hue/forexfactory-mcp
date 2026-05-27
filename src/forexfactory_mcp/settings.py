@@ -45,7 +45,14 @@ class Settings(BaseSettings):
 
     # === Core configuration values ===
     BASE_URL: str = "https://www.forexfactory.com"
-    SCRAPER_TIMEOUT_MS: int = 5000  # Default 5s (Playwright expects ms)
+    # HTTP timeout for the faireconomy JSON feed fetch in ff_scraper_service
+    # (value is in ms; the service divides by 1000 for httpx). Generous 45s so
+    # a slow CDN response doesn't fail the fetch — the feed is cached 10 min, so
+    # the cost is paid at most once per session. (Historically this was the
+    # Playwright navigation timeout; the HTML scrape was replaced by the JSON
+    # feed on 2026-05-27 after ForexFactory put /calendar behind Cloudflare.)
+    # Override per-deploy with the SCRAPER_TIMEOUT_MS env var if needed.
+    SCRAPER_TIMEOUT_MS: int = 45000  # 45s (milliseconds)
 
     # === MCP namespace ===
     NAMESPACE: str = "ffcal"
